@@ -33,4 +33,8 @@ Thunder::Map::Tile::Pos Thunder::Map::Tile::Coords::toPos(int zoom)
 void Thunder::Map::init()
 {
 	Net::connect("tile.openstreetmap.org");
+	Net::send("/12/2044/1556.png");
+	std::string response{ Net::receive() };
+	SDL_Log(response.c_str());
+	Net::close();
 }

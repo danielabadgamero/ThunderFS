@@ -44,6 +44,7 @@ namespace Thunder::Map
 	public:
 		Pos getPos();
 		Coords getCoords();
+		void load(std::string);
 	};
 
 	void init();

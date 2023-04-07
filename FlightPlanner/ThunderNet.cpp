@@ -12,9 +12,10 @@ void Thunder::Net::connect(std::string host)
 	SDLNet_TCP_AddSocket(socketSet, socket);
 }
 
-void Thunder::Net::send(std::string data)
+void Thunder::Net::send(std::string URL)
 {
-	SDLNet_TCP_Send(socket, data.c_str(), data.size() + 1);
+	std::string request{ "GET " + URL };
+	SDLNet_TCP_Send(socket, request.c_str(), request.size() + 1);
 }
 
 std::string Thunder::Net::receive()
