@@ -20,10 +20,10 @@ void Thunder::Net::send(std::string URL)
 
 std::vector<char> Thunder::Net::receive()
 {
-	char buffer[1 << 13]{};
-	SDLNet_TCP_Recv(socket, buffer, 1 << 13);
+	char buffer[10000]{};
+	SDLNet_TCP_Recv(socket, buffer, 10000);
 	std::vector<char> content{};
-	for (int i{}; i != 1 << 13; i++)
+	for (int i{}; i != 10000; i++)
 		content.push_back(buffer[i]);
 	return content;
 }

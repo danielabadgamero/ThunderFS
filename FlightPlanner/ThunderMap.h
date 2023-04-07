@@ -2,6 +2,7 @@
 #define THUNDER_MAP
 
 #include <string>
+#include <vector>
 
 #include <SDL.h>
 
@@ -44,12 +45,17 @@ namespace Thunder::Map
 
 		SDL_Texture* img{};
 	public:
+		Tile(int, int, SDL_Texture*);
 		Pos getPos();
 		Coords getCoords();
-		void load(std::string);
+		void load(std::vector<char>);
+		void draw() const;
 	};
 
+	inline std::vector<Tile> tiles{};
+
 	void init();
+	void draw();
 }
 
 #endif

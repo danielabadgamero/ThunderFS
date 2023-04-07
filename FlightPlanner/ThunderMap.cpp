@@ -2,6 +2,10 @@
 #include <vector>
 #include <iostream>
 
+#include <SDL.h>
+#include <SDL_image.h>
+
+#include "ThunderCore.h"
 #include "ThunderMap.h"
 #include "ThunderNet.h"
 
@@ -32,14 +36,27 @@ Thunder::Map::Tile::Pos Thunder::Map::Tile::Coords::toPos(int zoom)
 	return { static_cast<int>(floor((lon + 180) / 360 * static_cast<double>(1 << zoom))), static_cast<int>(floor((1 - asinh(tan(latRad)) / M_PI) / 2 * static_cast<double>(1 << zoom))) };
 }
 
-void Thunder::Map::init()
+void Thunder::Map::draw()
 {
-	Net::connect("tile.openstreetmap.org");
-	Net::send("/0/0/0.png");
+	for (const Tile& tile : tiles)
+		tile.draw();
+}
 
-	std::vector<char> response{ Net::receive() };
-	for (const char& c : response)
-		std::cout << c;
+void Thunder::Map::Tile::load(std::vector<char> content)
+{
+	SDL_RWops* img{ SDL_RWFromMem(content.data() + 690, 10000) };
+	tiles.push_back({ 0, 0, IMG_LoadTexture_RW(renderer, img, 0) });
+	SDL_RWclose(img);
+}
 
-	Net::close();
+void Thunder::Map::Tile::draw() const
+{
+	SDL_Rect rect{ pos.x, pos.y, 256, 256 };
+	SDL_RenderCopy(renderer, img, NULL, &rect);
+}
+
+Thunder::Map::Tile::Tile(int x, int y, SDL_Texture* texture) : img{ texture }
+{
+	pos.x = x;
+	pos.y = y;
 }

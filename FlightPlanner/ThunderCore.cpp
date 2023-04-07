@@ -71,6 +71,9 @@ void Thunder::draw()
 	ImGui::Render();
 	SDL_SetRenderDrawColor(renderer, 0x10, 0x10, 0x10, 0xFF);
 	SDL_RenderClear(renderer);
+
+	Map::draw();
+
 	ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 	SDL_RenderPresent(renderer);
 }
