@@ -107,7 +107,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>D:\SDK\SDL\include;D:\SDK\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Disabled</Optimization>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
@@ -148,9 +148,13 @@
     <ClCompile Include="..\..\..\SDK\imgui\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ThunderCore.cpp" />
+    <ClCompile Include="ThunderMap.cpp" />
+    <ClCompile Include="ThunderNet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThunderCore.h" />
+    <ClInclude Include="ThunderMap.h" />
+    <ClInclude Include="ThunderNet.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,4 +1,6 @@
 #include <cmath>
+#include <vector>
+#include <iostream>
 
 #include "ThunderMap.h"
 #include "ThunderNet.h"
@@ -11,8 +13,8 @@ void Thunder::Map::Camera::zoomOut() { if (zoom > 0) zoom--; }
 
 void Thunder::Map::Camera::move(int incX, int incY)
 {
-	x += static_cast<double>(incX) / (zoom + 1);
-	y += static_cast<double>(incY) / (zoom + 1);
+	x += incX;
+	y += incY;
 }
 
 Thunder::Map::Tile::Pos Thunder::Map::Tile::getPos() { return pos; }
@@ -33,8 +35,11 @@ Thunder::Map::Tile::Pos Thunder::Map::Tile::Coords::toPos(int zoom)
 void Thunder::Map::init()
 {
 	Net::connect("tile.openstreetmap.org");
-	Net::send("/12/2044/1556.png");
-	std::string response{ Net::receive() };
-	SDL_Log(response.c_str());
+	Net::send("/0/0/0.png");
+
+	std::vector<char> response{ Net::receive() };
+	for (const char& c : response)
+		std::cout << c;
+
 	Net::close();
 }

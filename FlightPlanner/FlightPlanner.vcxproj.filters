@@ -42,9 +42,21 @@
     <ClCompile Include="..\..\..\SDK\imgui\backends\imgui_impl_sdlrenderer.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
+    <ClCompile Include="ThunderMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ThunderNet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThunderCore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ThunderMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ThunderNet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

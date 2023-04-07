@@ -2,18 +2,19 @@
 #define THUNDER_NET
 
 #include <string>
+#include <vector>
 
 #include <SDL_net.h>
 
 namespace Thunder::Net
 {
 	inline TCPsocket socket{};
-	inline SDLNet_SocketSet socketSet{};
 	inline IPaddress ip{};
+	inline std::string host{};
 
 	void connect(std::string);
 	void send(std::string);
-	std::string receive();
+	std::vector<char> receive();
 	void close();
 }
 

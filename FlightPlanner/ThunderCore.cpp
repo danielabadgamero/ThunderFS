@@ -11,7 +11,7 @@
 void Thunder::init(const char* title)
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
-	IMG_Init(IMG_INIT_PNG);
+	IMG_Init(IMG_INIT_JPG);
 	SDLNet_Init();
 
 	SDL_GetCurrentDisplayMode(0, &monitor);
@@ -25,6 +25,8 @@ void Thunder::init(const char* title)
 	ImGui_ImplSDLRenderer_Init(renderer);
 
 	running = true;
+
+	Map::init();
 }
 
 void Thunder::event()

@@ -1,11 +1,13 @@
 #ifndef THUNDER_MAP
 #define THUNDER_MAP
 
+#include <string>
+
 #include <SDL.h>
 
 namespace Thunder::Map
 {
-	class Camera
+	inline class Camera
 	{
 	private:
 		int zoom{};
