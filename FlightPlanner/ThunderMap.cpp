@@ -23,3 +23,13 @@ void Thunder::Map::Camera::zoomOut()
 	if (zoom > 0)
 		zoom--;
 }
+
+Thunder::Map::Tile::Coords Thunder::Map::Tile::Pos::toCoords(int zoom)
+{
+
+}
+
+Thunder::Map::Tile::Pos Thunder::Map::Tile::Coords::toPos(int zoom)
+{
+
+}
