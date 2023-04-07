@@ -7,18 +7,14 @@
 
 namespace Thunder::Net
 {
-	class HTTPrequest
-	{
-	private:
-		std::string host{};
-	public:
-		void send();
-	};
-
 	inline TCPsocket socket{};
+	inline SDLNet_SocketSet socketSet{};
 	inline IPaddress ip{};
 
 	void connect(std::string);
+	void send(std::string);
+	std::string receive();
+	void close();
 }
 
 #endif
