@@ -35,8 +35,8 @@ namespace Thunder::Map
 
 		struct Coords
 		{
-			double lat{};
 			double lon{};
+			double lat{};
 			Pos toPos(int);
 		} coords{};
 
@@ -45,6 +45,8 @@ namespace Thunder::Map
 		Pos getPos();
 		Coords getCoords();
 	};
+
+	void init();
 }
 
 #endif
