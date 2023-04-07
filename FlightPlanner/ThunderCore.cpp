@@ -7,6 +7,7 @@
 
 #include "ThunderCore.h"
 #include "ThunderMap.h"
+#include "ThunderNet.h"
 
 void Thunder::init(const char* title)
 {
@@ -26,7 +27,7 @@ void Thunder::init(const char* title)
 
 	running = true;
 
-	Map::init();
+	Net::connect("tile.openstreetmap.org");
 }
 
 void Thunder::event()
@@ -80,6 +81,8 @@ void Thunder::draw()
 
 void Thunder::quit()
 {
+	Net::close();
+
 	ImGui_ImplSDLRenderer_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();

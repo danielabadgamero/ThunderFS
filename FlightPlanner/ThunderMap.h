@@ -43,18 +43,17 @@ namespace Thunder::Map
 			Pos toPos(int);
 		} coords{};
 
-		SDL_Texture* img{};
+		SDL_Texture* texture{};
 	public:
-		Tile(int, int, SDL_Texture*);
+		Tile(int, int, std::vector<char>);
 		Pos getPos();
 		Coords getCoords();
-		void load(std::vector<char>);
 		void draw() const;
 	};
 
 	inline std::vector<Tile> tiles{};
 
-	void init();
+	void event();
 	void draw();
 }
 

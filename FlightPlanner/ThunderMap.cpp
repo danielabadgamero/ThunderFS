@@ -42,21 +42,24 @@ void Thunder::Map::draw()
 		tile.draw();
 }
 
-void Thunder::Map::Tile::load(std::vector<char> content)
-{
-	SDL_RWops* img{ SDL_RWFromMem(content.data() + 690, 10000) };
-	tiles.push_back({ 0, 0, IMG_LoadTexture_RW(renderer, img, 0) });
-	SDL_RWclose(img);
-}
-
 void Thunder::Map::Tile::draw() const
 {
 	SDL_Rect rect{ pos.x, pos.y, 256, 256 };
-	SDL_RenderCopy(renderer, img, NULL, &rect);
+	SDL_RenderCopy(renderer, texture, NULL, &rect);
 }
 
-Thunder::Map::Tile::Tile(int x, int y, SDL_Texture* texture) : img{ texture }
+Thunder::Map::Tile::Tile(int x, int y, std::vector<char> content)
 {
+	SDL_RWops* img{ SDL_RWFromMem(content.data() + 690, 10000) };
+	texture = IMG_LoadTexture_RW(renderer, img, 0);
+	SDL_RWclose(img);
+
 	pos.x = x;
 	pos.y = y;
+}
+
+void Thunder::Map::event()
+{
+	Net::send("/" + std::to_string(camera.getZoom()) + "/" + std::to_string(camera.getX()) + "/" + std::to_string(camera.getY()) + ".png");
+	tiles.push_back({ camera.getX(), camera.getY(), Net::receive() });
 }
