@@ -22,6 +22,8 @@ void Thunder::init(const char* title)
 	ImGui::GetIO();
 	ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
 	ImGui_ImplSDLRenderer_Init(renderer);
+
+	running = true;
 }
 
 void Thunder::event()
@@ -34,6 +36,14 @@ void Thunder::event()
 		{
 		case SDL_QUIT:
 			running = false;
+			break;
+		case SDL_KEYDOWN:
+			switch (e.key.keysym.scancode)
+			{
+			case SDL_SCANCODE_ESCAPE:
+				running = false;
+				break;
+			}
 			break;
 		}
 	}

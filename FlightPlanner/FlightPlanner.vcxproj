@@ -139,7 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\SDK\imgui\backends\imgui_impl_sdl.cpp" />
+    <ClCompile Include="..\..\..\SDK\imgui\backends\imgui_impl_sdl2.cpp" />
     <ClCompile Include="..\..\..\SDK\imgui\backends\imgui_impl_sdlrenderer.cpp" />
     <ClCompile Include="..\..\..\SDK\imgui\imgui.cpp" />
     <ClCompile Include="..\..\..\SDK\imgui\imgui_demo.cpp" />
@@ -151,7 +151,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThunderCore.h" />
-    <ClInclude Include="ThunderMap.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

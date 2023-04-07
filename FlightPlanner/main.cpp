@@ -2,7 +2,7 @@
 
 int main(int, char**)
 {
-	Thunder::init("Thunder VFR Flight Planner");
+	Thunder::init("");
 
 	while (Thunder::running)
 	{
