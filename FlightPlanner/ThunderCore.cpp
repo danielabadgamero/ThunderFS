@@ -6,6 +6,7 @@
 #include <backends/imgui_impl_sdlrenderer.h>
 
 #include "ThunderCore.h"
+#include "ThunderMap.h"
 
 void Thunder::init(const char* title)
 {
@@ -44,6 +45,16 @@ void Thunder::event()
 				running = false;
 				break;
 			}
+			break;
+		case SDL_MOUSEMOTION:
+			if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+				Map::camera.move(e.motion.xrel, e.motion.yrel);
+			break;
+		case SDL_MOUSEWHEEL:
+			if (e.wheel.y > 0)
+				Map::camera.zoomIn();
+			else
+				Map::camera.zoomOut();
 			break;
 		}
 	}
