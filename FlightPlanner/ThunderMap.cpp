@@ -2,6 +2,8 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_set>
+#include <fstream>
+#include <filesystem>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -90,16 +92,37 @@ int Thunder::Map::updateTiles(void*)
 			if (!tiles.contains(Tile{ camera.getZoom(), startX, startY, {} }))
 			{
 				int max{ static_cast<int>(std::pow(2, camera.getZoom())) };
-				if (startX >= max)
-					break;
-				if (startY >= max)
-					goto end;
-				Net::send("/" + std::to_string(camera.getZoom()) + "/" + std::to_string(mod(startX, max)) + "/" + std::to_string(mod(startY, max)) + ".png");
-				std::vector<char> content{ Net::receive() };
-				if (content.size() > 1)
-					tiles.emplace(Tile{ camera.getZoom(), mod(startX, max), mod(startY, max), content});
+				std::string URL{ "/" + std::to_string(camera.getZoom()) + "/" + std::to_string(mod(startX, max)) + "/" + std::to_string(mod(startY, max)) + ".png" };
+				std::string path{ std::to_string(camera.getZoom()) + "_" + std::to_string(mod(startX, max)) + "_" + std::to_string(mod(startY, max)) + ".png" };
+				std::vector<char> content{};
+				if (std::filesystem::exists("./tiles/" + path))
+				{
+					std::ifstream tile{ "./tiles/" + path, std::ios::binary};
+					while (!tile.eof())
+					{
+						content.push_back(0);
+						tile.read(&content.back(), 1);
+						tiles.emplace(Tile{ camera.getZoom(), startX, startY, content });
+					}
+				}
+				else
+				{
+					Net::send(URL);
+					content = Net::receive();
+					std::vector<char>::iterator PNG_start{ std::find(content.begin(), content.end(), -119) };
+					if (PNG_start == content.end())
+					{
+						threadStatus = 1;
+						return 0;
+					}
+					if (content.size() > 1)
+					{
+						tiles.emplace(Tile{ camera.getZoom(), startX, startY, content });
+						std::ofstream tile{ "./tiles/" + path, std::ios::binary};
+						tile.write(content.data(), content.size());
+					}
+				}
 			}
-end:
 	threadStatus = 1;
 	return 0;
 }
@@ -109,7 +132,7 @@ void Thunder::Map::draw()
 	for (std::unordered_set<Tile>::iterator tile{ tiles.begin() }; tile != tiles.end();)
 		if (tile->getZoom() == camera.getZoom())
 		{
-			SDL_Rect cameraRect{ camera.getX() - 512, camera.getY() - 512, monitor.w + 512, monitor.h + 512 };
+			SDL_Rect cameraRect{ camera.getX() - 256, camera.getY() - 256, monitor.w + 256, monitor.h + 256 };
 			SDL_Point tilePoint{ tile->getPos().x * 256, tile->getPos().y * 256 };
 			if (SDL_PointInRect(&tilePoint, &cameraRect))
 			{
