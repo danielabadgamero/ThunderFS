@@ -100,10 +100,10 @@ Thunder::Map::Tile::Tile(int zoom, int x, int y, std::vector<char> content) : zo
 	std::vector<char>::iterator startIt{ std::find(content.begin(), content.end(), -119) };
 	if (startIt == content.end())
 		return;
-	char* start{ &(*startIt) };
-	SDL_RWops* img{ SDL_RWFromMem(start, static_cast<int>(content.end() - startIt)) };
-	texture = IMG_LoadTexture_RW(renderer, img, 0);
-	SDL_RWclose(img);
+	for (; startIt != content.end(); startIt++)
+		rawTexture.push_back(*startIt);
+
+	render();
 }
 
 int Thunder::Map::Tile::getZoom() const { return zoom; }
@@ -116,4 +116,12 @@ size_t Thunder::Map::Tile::HashFunc::operator()(const Tile& tile) const
 	size_t xHash{ std::hash<int>()(tile.pos.x) << 1 };
 	size_t yHash{ std::hash<int>()(tile.pos.y) << 2 };
 	return zHash ^ xHash ^ yHash;
+}
+
+void Thunder::Map::Tile::render()
+{
+	char* start{ &(*rawTexture.begin()) };
+	SDL_RWops* img{ SDL_RWFromMem(start, static_cast<int>(rawTexture.end() - rawTexture.begin())) };
+	texture = IMG_LoadTexture_RW(renderer, img, 0);
+	SDL_RWclose(img);
 }
