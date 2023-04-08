@@ -37,8 +37,8 @@ void Thunder::Map::Camera::zoomOut()
 
 void Thunder::Map::Camera::move(int incX, int incY)
 {
-	x += incX;
-	y += incY;
+	x -= incX;
+	y -= incY;
 }
 
 Thunder::Map::Pos Thunder::Map::Tile::getPos() const { return pos; }
@@ -58,7 +58,7 @@ Thunder::Map::Pos Thunder::Map::Coords::toPos(int zoom) const
 
 int Thunder::Map::updateTiles(void*)
 {
-	Pos endPos{ (monitor.w - camera.getX()) / 256 + 1, (monitor.h - camera.getY()) / 256 + 1 };
+	Pos endPos{ (monitor.w + camera.getX()) / 256 + 1, (monitor.h + camera.getY()) / 256 + 1 };
 
 	for (int startY{ camera.getY() / 256 }; startY != endPos.y; startY++)
 		for (int startX{ camera.getX() / 256 }; startX != endPos.x; startX++)
@@ -88,8 +88,11 @@ void Thunder::Map::draw()
 
 void Thunder::Map::Tile::draw() const
 {
-	SDL_Rect rect{ pos.x * 256 + camera.getX(), pos.y * 256 + camera.getY(), 256, 256 };
-	SDL_RenderCopy(renderer, texture, NULL, &rect);
+	if (texture)
+	{
+		SDL_Rect rect{ pos.x * 256 - camera.getX(), pos.y * 256 - camera.getY(), 256, 256 };
+		SDL_RenderCopy(renderer, texture, NULL, &rect);
+	}
 }
 
 Thunder::Map::Tile::Tile(int zoom, int x, int y, std::vector<char> content) : zoom{ zoom }
@@ -122,6 +125,8 @@ void Thunder::Map::Tile::render()
 {
 	char* start{ &(*rawTexture.begin()) };
 	SDL_RWops* img{ SDL_RWFromMem(start, static_cast<int>(rawTexture.end() - rawTexture.begin())) };
+	SDL_Log("Before creataing texture");
 	texture = IMG_LoadTexture_RW(renderer, img, 0);
+	SDL_Log("After creataing texture");
 	SDL_RWclose(img);
 }
