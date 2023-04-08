@@ -9,22 +9,20 @@ void Thunder::Net::connect(std::string h)
 {
 	host = h;
 	SDLNet_ResolveHost(&ip, host.c_str(), 80);
-	socket = SDLNet_TCP_Open(&ip);
 }
 
 void Thunder::Net::send(std::string URL)
 {
-	std::string request{ "GET " + URL + " HTTP/1.0\n" + "Host: " + host + "\nUser-Agent: ThunderFlightPlanner/0.1\n\n" };
+	socket = SDLNet_TCP_Open(&ip);
+	std::string request{ "GET " + URL + " HTTP/1.0\r\n" + "Host: " + host + "\r\nUser-Agent: ThunderFlightPlanner/0.1\r\n\r\n" };
 	SDLNet_TCP_Send(socket, request.c_str(), static_cast<int>(request.size()) + 1);
 }
 
 std::vector<char> Thunder::Net::receive()
 {
-	char buffer[10000]{};
-	SDLNet_TCP_Recv(socket, buffer, 10000);
-	std::vector<char> content{};
-	for (int i{}; i != 10000; i++)
-		content.push_back(buffer[i]);
+	std::vector<char> content(1);
+	while (SDLNet_TCP_Recv(socket, &content.back(), 1) == 1)
+		content.push_back(0);
 	return content;
 }
 

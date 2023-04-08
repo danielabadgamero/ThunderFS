@@ -28,7 +28,7 @@ namespace Thunder::Map
 	inline class Camera
 	{
 	private:
-		int zoom{};
+		int zoom{ 1 };
 		int x{};
 		int y{};
 	public:

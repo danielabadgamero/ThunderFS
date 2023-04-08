@@ -12,7 +12,7 @@
 void Thunder::init(const char* title)
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
-	IMG_Init(IMG_INIT_JPG);
+	IMG_Init(IMG_INIT_PNG);
 	SDLNet_Init();
 
 	SDL_GetCurrentDisplayMode(0, &monitor);
