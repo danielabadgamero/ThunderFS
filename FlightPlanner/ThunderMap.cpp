@@ -27,8 +27,13 @@ void Thunder::Map::Camera::zoomIn()
 {
 	if (zoom < 19)
 	{
+		int mouseX{};
+		int mouseY{};
+		SDL_GetMouseState(&mouseX, &mouseY);
 		x *= 2;
 		y *= 2;
+		x += mouseX;
+		y += mouseY;
 		zoom++;
 		if (threadStatus)
 		{
@@ -43,8 +48,13 @@ void Thunder::Map::Camera::zoomOut()
 {
 	if (zoom > 0)
 	{
+		int mouseX{};
+		int mouseY{};
+		SDL_GetMouseState(&mouseX, &mouseY);
 		x /= 2;
 		y /= 2;
+		x -= mouseX;
+		y -= mouseY;
 		zoom--;
 		if (threadStatus)
 		{
@@ -102,24 +112,19 @@ int Thunder::Map::updateTiles(void*)
 					{
 						content.push_back(0);
 						tile.read(&content.back(), 1);
-						tiles.emplace(Tile{ camera.getZoom(), startX, startY, content });
 					}
+					tiles.emplace(Tile{ camera.getZoom(), startX, startY, content });
 				}
 				else
 				{
 					Net::send(URL);
 					content = Net::receive();
-					std::vector<char>::iterator PNG_start{ std::find(content.begin(), content.end(), -119) };
-					if (PNG_start == content.end())
-					{
-						threadStatus = 1;
-						return 0;
-					}
 					if (content.size() > 1)
 					{
 						tiles.emplace(Tile{ camera.getZoom(), startX, startY, content });
 						std::ofstream tile{ "./tiles/" + path, std::ios::binary};
-						tile.write(content.data(), content.size());
+						for (std::vector<char>::iterator PNG_start{ std::find(content.begin(), content.end(), -119) }; PNG_start != content.end(); PNG_start++)
+							tile.write(&(*PNG_start), 1);
 					}
 				}
 			}
@@ -132,7 +137,7 @@ void Thunder::Map::draw()
 	for (std::unordered_set<Tile>::iterator tile{ tiles.begin() }; tile != tiles.end();)
 		if (tile->getZoom() == camera.getZoom())
 		{
-			SDL_Rect cameraRect{ camera.getX() - 256, camera.getY() - 256, monitor.w + 256, monitor.h + 256 };
+			SDL_Rect cameraRect{ camera.getX() - 1024, camera.getY() - 1024, monitor.w + 2048, monitor.h + 2048 };
 			SDL_Point tilePoint{ tile->getPos().x * 256, tile->getPos().y * 256 };
 			if (SDL_PointInRect(&tilePoint, &cameraRect))
 			{
@@ -144,7 +149,6 @@ void Thunder::Map::draw()
 		}
 		else
 			tiles.erase(tile++);
-
 }
 
 void Thunder::Map::Tile::draw() const
