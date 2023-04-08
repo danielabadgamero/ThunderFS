@@ -59,7 +59,6 @@ namespace Thunder::Map
 		Coords getCoords() const;
 		int getZoom() const;
 		void draw() const;
-		SDL_Texture* getTexture() const;
 	};
 
 	inline SDL_Thread* updateThread{};
