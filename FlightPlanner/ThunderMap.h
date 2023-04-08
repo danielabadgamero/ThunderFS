@@ -42,15 +42,24 @@ namespace Thunder::Map
 
 	class Tile
 	{
+	public:
+		struct Data
+		{
+			int zoom{};
+			Pos pos{};
+		};
 	private:
-		Pos pos{};
+		Data data{};
 		Coords coords{};
 		SDL_Texture* texture{};
 	public:
 		Tile(int, int, std::vector<char>);
 		Pos getPos();
 		Coords getCoords();
+		int getZoom();
 		void draw() const;
+
+		bool operator==(Data);
 	};
 
 	inline std::vector<Tile> tiles{};

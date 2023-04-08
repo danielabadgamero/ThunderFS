@@ -1,6 +1,7 @@
 #include <cmath>
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -21,7 +22,7 @@ void Thunder::Map::Camera::move(int incX, int incY)
 	y += incY;
 }
 
-Thunder::Map::Pos Thunder::Map::Tile::getPos() { return pos; }
+Thunder::Map::Pos Thunder::Map::Tile::getPos() { return data.pos; }
 Thunder::Map::Coords Thunder::Map::Tile::getCoords() { return coords; }
 
 Thunder::Map::Coords Thunder::Map::Pos::toCoords(int zoom)
@@ -38,7 +39,17 @@ Thunder::Map::Pos Thunder::Map::Coords::toPos(int zoom)
 
 void Thunder::Map::draw()
 {
-	Pos startPos{ camera.getX() / 256 };
+	Pos startPos{ camera.getX() / 256, camera.getY() / 256 };
+	Pos endPos{ (camera.getX() + monitor.w) / 256, (camera.getY() / monitor.h) / 256 };
+
+	for (; startPos.y != endPos.y; startPos.y++)
+		for (; startPos.x != endPos.x; startPos.x++)
+		{
+			Net::send("/" + std::to_string(camera.getZoom()) + "/" + std::to_string(startPos.x) + "/" + std::to_string(startPos.y) + ".png");
+			std::vector<char> content{ Net::receive() };
+			if (std::find(tiles.begin(), tiles.end(), Tile::Data{ camera.getZoom(), startPos.x, startPos.y }) == tiles.end())
+				tiles.push_back({ startPos.x, startPos.y, content });
+		}
 
 	for (const Tile& tile : tiles)
 		tile.draw();
@@ -46,7 +57,7 @@ void Thunder::Map::draw()
 
 void Thunder::Map::Tile::draw() const
 {
-	SDL_Rect rect{ pos.x, pos.y, 256, 256 };
+	SDL_Rect rect{ data.pos.x, data.pos.y, 256, 256 };
 	SDL_RenderCopy(renderer, texture, NULL, &rect);
 }
 
@@ -56,6 +67,9 @@ Thunder::Map::Tile::Tile(int x, int y, std::vector<char> content)
 	texture = IMG_LoadTexture_RW(renderer, img, 0);
 	SDL_RWclose(img);
 
-	pos.x = x;
-	pos.y = y;
+	data.pos.x = x;
+	data.pos.y = y;
 }
+
+bool Thunder::Map::Tile::operator==(Thunder::Map::Tile::Data B) { return (data.zoom == B.zoom) && (data.pos.x == B.pos.x) && (data.pos.y == B.pos.y); }
+int Thunder::Map::Tile::getZoom() { return data.zoom; }
