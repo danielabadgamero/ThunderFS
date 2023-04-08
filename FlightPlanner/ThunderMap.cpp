@@ -18,6 +18,8 @@ void Thunder::Map::Camera::zoomIn()
 	if (zoom < 19 && threadStatus)
 	{
 		zoom++;
+		x += 256 * zoom;
+		y += 256 * zoom;
 		threadStatus = 0;
 		SDL_WaitThread(updateThread, nullptr);
 		updateThread = SDL_CreateThread(updateTiles, "updateTiles", nullptr);
@@ -29,6 +31,8 @@ void Thunder::Map::Camera::zoomOut()
 	if (zoom > 0 && threadStatus)
 	{
 		zoom--;
+		x -= 256 * zoom;
+		y -= 256 * zoom;
 		threadStatus = 0;
 		SDL_WaitThread(updateThread, nullptr);
 		updateThread = SDL_CreateThread(updateTiles, "updateTiles", nullptr);
@@ -39,6 +43,12 @@ void Thunder::Map::Camera::move(int incX, int incY)
 {
 	x -= incX;
 	y -= incY;
+	if (threadStatus)
+	{
+		threadStatus = 0;
+		SDL_WaitThread(updateThread, nullptr);
+		updateThread = SDL_CreateThread(updateTiles, "updateTiles", nullptr);
+	}
 }
 
 Thunder::Map::Pos Thunder::Map::Tile::getPos() const { return pos; }
@@ -88,11 +98,15 @@ void Thunder::Map::draw()
 
 void Thunder::Map::Tile::draw() const
 {
+	SDL_RWops* img{ SDL_RWFromMem((void*)rawTexture.data(), static_cast<int>(rawTexture.end() - rawTexture.begin()))};
+	SDL_Texture* texture{ IMG_LoadTexture_RW(renderer, img, 0) };
+	SDL_RWclose(img);
 	if (texture)
 	{
 		SDL_Rect rect{ pos.x * 256 - camera.getX(), pos.y * 256 - camera.getY(), 256, 256 };
 		SDL_RenderCopy(renderer, texture, NULL, &rect);
 	}
+	SDL_DestroyTexture(texture);
 }
 
 Thunder::Map::Tile::Tile(int zoom, int x, int y, std::vector<char> content) : zoom{ zoom }
@@ -105,12 +119,9 @@ Thunder::Map::Tile::Tile(int zoom, int x, int y, std::vector<char> content) : zo
 		return;
 	for (; startIt != content.end(); startIt++)
 		rawTexture.push_back(*startIt);
-
-	render();
 }
 
 int Thunder::Map::Tile::getZoom() const { return zoom; }
-SDL_Texture* Thunder::Map::Tile::getTexture() const { return texture; }
 bool Thunder::Map::Tile::operator==(const Tile& tile) const { return (zoom == tile.zoom) && (pos.x == tile.pos.x) && (pos.y == tile.pos.y); }
 
 size_t Thunder::Map::Tile::HashFunc::operator()(const Tile& tile) const
@@ -119,14 +130,4 @@ size_t Thunder::Map::Tile::HashFunc::operator()(const Tile& tile) const
 	size_t xHash{ std::hash<int>()(tile.pos.x) << 1 };
 	size_t yHash{ std::hash<int>()(tile.pos.y) << 2 };
 	return zHash ^ xHash ^ yHash;
-}
-
-void Thunder::Map::Tile::render()
-{
-	char* start{ &(*rawTexture.begin()) };
-	SDL_RWops* img{ SDL_RWFromMem(start, static_cast<int>(rawTexture.end() - rawTexture.begin())) };
-	SDL_Log("Before creataing texture");
-	texture = IMG_LoadTexture_RW(renderer, img, 0);
-	SDL_Log("After creataing texture");
-	SDL_RWclose(img);
 }

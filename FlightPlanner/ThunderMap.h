@@ -48,7 +48,6 @@ namespace Thunder::Map
 		Pos pos{};
 		Coords coords{};
 		std::vector<char> rawTexture{};
-		SDL_Texture* texture{};
 	public:
 		struct HashFunc
 		{
@@ -60,7 +59,6 @@ namespace Thunder::Map
 		Coords getCoords() const;
 		int getZoom() const;
 		void draw() const;
-		void render();
 		SDL_Texture* getTexture() const;
 	};
 
