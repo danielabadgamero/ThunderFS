@@ -8,6 +8,23 @@
 
 namespace Thunder::Map
 {
+	struct Pos;
+	struct Coords;
+
+	struct Pos
+	{
+		int x{};
+		int y{};
+		Coords toCoords(int);
+	};
+
+	struct Coords
+	{
+		double lon{};
+		double lat{};
+		Pos toPos(int);
+	};
+
 	inline class Camera
 	{
 	private:
@@ -26,23 +43,8 @@ namespace Thunder::Map
 	class Tile
 	{
 	private:
-		struct Pos;
-		struct Coords;
-
-		struct Pos
-		{
-			int x{};
-			int y{};
-			Coords toCoords(int);
-		} pos{};
-
-		struct Coords
-		{
-			double lon{};
-			double lat{};
-			Pos toPos(int);
-		} coords{};
-
+		Pos pos{};
+		Coords coords{};
 		SDL_Texture* texture{};
 	public:
 		Tile(int, int, std::vector<char>);
@@ -53,7 +55,6 @@ namespace Thunder::Map
 
 	inline std::vector<Tile> tiles{};
 
-	void event();
 	void draw();
 }
 

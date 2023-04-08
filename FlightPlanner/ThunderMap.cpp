@@ -21,16 +21,16 @@ void Thunder::Map::Camera::move(int incX, int incY)
 	y += incY;
 }
 
-Thunder::Map::Tile::Pos Thunder::Map::Tile::getPos() { return pos; }
-Thunder::Map::Tile::Coords Thunder::Map::Tile::getCoords() { return coords; }
+Thunder::Map::Pos Thunder::Map::Tile::getPos() { return pos; }
+Thunder::Map::Coords Thunder::Map::Tile::getCoords() { return coords; }
 
-Thunder::Map::Tile::Coords Thunder::Map::Tile::Pos::toCoords(int zoom)
+Thunder::Map::Coords Thunder::Map::Pos::toCoords(int zoom)
 {
 	double n{ M_PI - 2 * M_PI * y / static_cast<double>(1 << zoom) };
 	return { x / static_cast<double>(1 << zoom) * 360 - 180, 180 / M_PI * atan(0.5 * (exp(n) - exp(-n))) };
 }
 
-Thunder::Map::Tile::Pos Thunder::Map::Tile::Coords::toPos(int zoom)
+Thunder::Map::Pos Thunder::Map::Coords::toPos(int zoom)
 {
 	double latRad{ lat * M_PI / 180 };
 	return { static_cast<int>(floor((lon + 180) / 360 * static_cast<double>(1 << zoom))), static_cast<int>(floor((1 - asinh(tan(latRad)) / M_PI) / 2 * static_cast<double>(1 << zoom))) };
@@ -38,6 +38,8 @@ Thunder::Map::Tile::Pos Thunder::Map::Tile::Coords::toPos(int zoom)
 
 void Thunder::Map::draw()
 {
+	Pos startPos{ camera.getX() / 256 };
+
 	for (const Tile& tile : tiles)
 		tile.draw();
 }
@@ -56,10 +58,4 @@ Thunder::Map::Tile::Tile(int x, int y, std::vector<char> content)
 
 	pos.x = x;
 	pos.y = y;
-}
-
-void Thunder::Map::event()
-{
-	Net::send("/" + std::to_string(camera.getZoom()) + "/" + std::to_string(camera.getX()) + "/" + std::to_string(camera.getY()) + ".png");
-	tiles.push_back({ camera.getX(), camera.getY(), Net::receive() });
 }
