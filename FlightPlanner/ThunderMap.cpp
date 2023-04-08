@@ -97,8 +97,8 @@ int Thunder::Map::updateTiles(void*)
 {
 	Pos endPos{ (monitor.w + camera.getX()) / 256 + 1, (monitor.h + camera.getY()) / 256 + 1 };
 
-	for (int startY{ camera.getY() / 256 }; startY != endPos.y; startY++)
-		for (int startX{ camera.getX() / 256 }; startX != endPos.x; startX++)
+	for (int startY{ camera.getY() / 256 - 1 }; startY != endPos.y; startY++)
+		for (int startX{ camera.getX() / 256 - 1 }; startX != endPos.x; startX++)
 			if (!tiles.contains(Tile{ camera.getZoom(), startX, startY, {} }))
 			{
 				int max{ static_cast<int>(std::pow(2, camera.getZoom())) };
@@ -137,7 +137,7 @@ void Thunder::Map::draw()
 	for (std::unordered_set<Tile>::iterator tile{ tiles.begin() }; tile != tiles.end();)
 		if (tile->getZoom() == camera.getZoom())
 		{
-			SDL_Rect cameraRect{ camera.getX() - 1024, camera.getY() - 1024, monitor.w + 2048, monitor.h + 2048 };
+			SDL_Rect cameraRect{ camera.getX() - 256, camera.getY() - 256, monitor.w + 256, monitor.h + 256 };
 			SDL_Point tilePoint{ tile->getPos().x * 256, tile->getPos().y * 256 };
 			if (SDL_PointInRect(&tilePoint, &cameraRect))
 			{
