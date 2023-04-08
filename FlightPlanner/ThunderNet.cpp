@@ -20,9 +20,9 @@ void Thunder::Net::send(std::string URL)
 
 std::vector<char> Thunder::Net::receive()
 {
-	std::vector<char> content(1);
-	while (SDLNet_TCP_Recv(socket, &content.back(), 1) == 1)
-		content.push_back(0);
+	std::vector<char> content{};
+	do content.push_back(0);
+	while (SDLNet_TCP_Recv(socket, &content.back(), 1) == 1);
 	return content;
 }
 

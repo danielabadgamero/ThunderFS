@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 #include <SDL.h>
 
@@ -15,26 +16,26 @@ namespace Thunder::Map
 	{
 		int x{};
 		int y{};
-		Coords toCoords(int);
+		Coords toCoords(int) const;
 	};
 
 	struct Coords
 	{
 		double lon{};
 		double lat{};
-		Pos toPos(int);
+		Pos toPos(int) const;
 	};
 
 	inline class Camera
 	{
 	private:
-		int zoom{ 1 };
+		int zoom{};
 		int x{};
 		int y{};
 	public:
-		int getZoom();
-		int getX();
-		int getY();
+		int getZoom() const;
+		int getX() const;
+		int getY() const;
 		void zoomIn();
 		void zoomOut();
 		void move(int, int);
@@ -42,29 +43,31 @@ namespace Thunder::Map
 
 	class Tile
 	{
-	public:
-		struct Data
-		{
-			int zoom{};
-			Pos pos{};
-		};
 	private:
-		Data data{};
+		int zoom{};
+		Pos pos{};
 		Coords coords{};
 		SDL_Texture* texture{};
 	public:
-		Tile(int, int, std::vector<char>);
-		Pos getPos();
-		Coords getCoords();
-		int getZoom();
+		struct HashFunc
+		{
+			size_t operator()(const Tile&) const;
+		};
+		bool operator==(const Tile&) const;
+		Tile(int, int, int, std::vector<char>);
+		Pos getPos() const;
+		Coords getCoords() const;
+		int getZoom() const;
 		void draw() const;
-
-		bool operator==(Data);
+		SDL_Texture* getTexture() const;
 	};
 
-	inline std::vector<Tile> tiles{};
+	inline SDL_Thread* updateThread{};
+	inline int threadStatus{};
+	inline std::unordered_set<Tile, Tile::HashFunc> tiles{};
 
 	void draw();
+	int updateTiles(void*);
 }
 
 #endif

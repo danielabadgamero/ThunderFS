@@ -28,6 +28,7 @@ void Thunder::init(const char* title)
 	running = true;
 
 	Net::connect("tile.openstreetmap.org");
+	Map::updateTiles(nullptr);
 }
 
 void Thunder::event()
