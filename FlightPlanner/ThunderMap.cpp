@@ -113,8 +113,8 @@ bool Thunder::Map::Pos::operator==(const Pos& B) const
 
 void Thunder::Map::updateTiles()
 {
-	for (int startY{}; startY != monitor.h / 256 + 1; startY++)
-		for (int startX{}; startX != monitor.w / 256 + 1; startX++)
+	for (int startY{}; startY != monitor.h / 256 + 2; startY++)
+		for (int startX{}; startX != monitor.w / 256 + 2; startX++)
 		{
 			int max{ static_cast<int>(std::pow(2, camera.getZoom())) };
 			if (!tiles[camera.getZoom()].contains({ mod(startX + camera.getX() / 256, max), mod(startY + camera.getY() / 256, max) }))
