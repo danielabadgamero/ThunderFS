@@ -82,7 +82,7 @@ void Thunder::Map::updateTiles()
 		for (int startX{}; startX != monitor.w / 256 + 1; startX++)
 		{
 			int max{ static_cast<int>(std::pow(2, camera.getZoom())) };
-			if (!tiles[camera.getZoom()].contains({ mod(startX + camera.getX() / 256, max), mod(startY + camera.getY() / 256, max)}))
+			if (!tiles[camera.getZoom()].contains({ mod(startX + camera.getX() / 256, max), mod(startY + camera.getY() / 256, max) }))
 				for (int i{}; i != 200; i++)
 					if (updateThreads[i].threadDone)
 					{
@@ -111,7 +111,8 @@ int Thunder::Map::addTile(void* data)
 			content.push_back(0);
 			tile.read(&content.back(), 1);
 		}
-		tiles[camera.getZoom()][{ pos.x, pos.y }] = new Tile{ content };
+		if (content[0] == -119)
+			tiles[camera.getZoom()][{ pos.x, pos.y }] = new Tile{ content };
 	}
 	else
 	{
