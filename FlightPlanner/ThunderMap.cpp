@@ -19,6 +19,15 @@ static int mod(int x, int y)
 	return x - y * (x / y - (x % y && (x ^ y) < 0));
 }
 
+static bool isPNG(std::vector<char> content)
+{
+	std::vector<char> PNG{ '\x89', '\x50', '\x4E', '\x47', '\x0D', '\x0A', '\x1A', '\x0A', '\x00', '\x00', '\x00', '\x0D', '\x49', '\x48', '\x44', '\x52' };
+	for (int i{}; i != PNG.size(); i++)
+		if (content[i] != PNG[i])
+			return false;
+	return true;
+}
+
 int Thunder::Map::Camera::getZoom() const { return zoom; }
 int Thunder::Map::Camera::getX() const { return x; }
 int Thunder::Map::Camera::getY() const { return y; }
@@ -83,36 +92,37 @@ void Thunder::Map::updateTiles()
 		{
 			int max{ static_cast<int>(std::pow(2, camera.getZoom())) };
 			if (!tiles[camera.getZoom()].contains({ mod(startX + camera.getX() / 256, max), mod(startY + camera.getY() / 256, max) }))
-				for (int i{}; i != 200; i++)
-					if (updateThreads[i].threadDone)
-					{
-						SDL_WaitThread(updateThreads[i].thread, nullptr);
-						updateThreads[i].threadDone = false;
-						updateThreads[i].thread = SDL_CreateThread(addTile, std::string{ "update_#" + std::to_string(i) }.c_str(), (void*)(new ThreadData
-							{ mod(startX + camera.getX() / 256, max), mod(startY + camera.getY() / 256, max), i }));
-						break;
-					}
+				if (threadDone)
+				{
+					SDL_WaitThread(updateThread, nullptr);
+					threadDone = false;
+					updateThread = SDL_CreateThread(addTile, "updateThread", (void*)(new Pos
+						{ mod(startX + camera.getX() / 256, max), mod(startY + camera.getY() / 256, max) }));
+				}
 		}
 }
 
 int Thunder::Map::addTile(void* data)
 {
-	ThreadData pos{ *(ThreadData*)data };
+	Pos pos{ *(Pos*)data };
 
 	std::string URL{ "/" + std::to_string(camera.getZoom()) + "/" + std::to_string(pos.x) + "/" + std::to_string(pos.y) + ".png" };
-	std::string path{ std::to_string(camera.getZoom()) + "_" + std::to_string(pos.x) + "_" + std::to_string(pos.y) + ".png" };
+	std::string path{ "./tiles/" + std::to_string(camera.getZoom()) + "_" + std::to_string(pos.x) + "_" + std::to_string(pos.y) + ".png"};
 
 	std::vector<char> content{};
-	if (std::filesystem::exists("./tiles/" + path))
+	if (std::filesystem::exists(path))
 	{
-		std::ifstream tile{ "./tiles/" + path, std::ios::binary };
+		std::ifstream tile{ path, std::ios::binary };
 		while (!tile.eof())
 		{
 			content.push_back(0);
 			tile.read(&content.back(), 1);
 		}
-		if (content[0] == -119)
+		tile.close();
+		if (isPNG(content) && content.size() > 0)
 			tiles[camera.getZoom()][{ pos.x, pos.y }] = new Tile{ content };
+		else
+			std::remove(path.c_str());
 	}
 	else
 	{
@@ -121,39 +131,41 @@ int Thunder::Map::addTile(void* data)
 		if (content.size() > 1)
 		{
 			tiles[camera.getZoom()][{ pos.x, pos.y }] = new Tile{ content };
-			std::ofstream tile{ "./tiles/" + path, std::ios::binary };
+			std::ofstream tile{ path, std::ios::binary };
 			for (std::vector<char>::iterator PNG_start{ std::find(content.begin(), content.end(), -119) }; PNG_start != content.end(); PNG_start++)
 				tile.write(&(*PNG_start), 1);
 		}
 	}
 
-	updateThreads[pos.i].threadDone = true;
+	threadDone = true;
 
 	return 0;
 }
 
 void Thunder::Map::draw()
 {
-	for (const auto& [pos, tile] : tiles[camera.getZoom()])
-		if (tile->inCamera(pos))
-			tile->draw(pos);
-}
-
-bool Thunder::Map::Tile::inCamera(Pos pos) const
-{
-	SDL_Point tilePoint{ pos.x, pos.y };
-	SDL_Rect cameraRect{ -256, -256, monitor.w + 256, monitor.h + 256 };
-	return SDL_PointInRect(&tilePoint, &cameraRect);
+	for (int y{ camera.getY() / 256 }; y != (camera.getY() + monitor.h) / 256 + 1; y++)
+		for (int x{ camera.getX() / 256 }; x != (camera.getX() + monitor.w) / 256 + 1; x++)
+			if (tiles[camera.getZoom()].contains({x, y}))
+				tiles[camera.getZoom()][{x, y}]->draw({x, y});
 }
 
 void Thunder::Map::Tile::draw(Pos pos) const
 {
-	SDL_RWops* img{ SDL_RWFromMem((void*)rawTexture.data(), static_cast<int>(rawTexture.end() - rawTexture.begin()))};
-	SDL_Texture* texture{ IMG_LoadTexture_RW(renderer, img, 0) };
-	SDL_RWclose(img);
-	SDL_Rect rect{ pos.x * 256 - camera.getX(), pos.y * 256 - camera.getY(), 256, 256 };
-	SDL_RenderCopy(renderer, texture, NULL, &rect);
-	SDL_DestroyTexture(texture);
+	SDL_RWops* img{ SDL_RWFromMem((void*)rawTexture.data(), static_cast<int>(rawTexture.end() - rawTexture.begin())) };
+	if (IMG_isPNG(img))
+	{
+		SDL_Texture* texture{ IMG_LoadTexture_RW(renderer, img, 0) };
+		SDL_RWclose(img);
+		if (texture)
+		{
+			SDL_Rect rect{ pos.x * 256 - camera.getX(), pos.y * 256 - camera.getY(), 256, 256 };
+			SDL_RenderCopy(renderer, texture, NULL, &rect);
+			SDL_DestroyTexture(texture);
+		}
+		else
+			std::remove(("./tiles/" + std::to_string(camera.getZoom()) + "_" + std::to_string(pos.x) + "_" + std::to_string(pos.y) + ".png").c_str());
+	}
 }
 
 Thunder::Map::Tile::Tile(std::vector<char> content)

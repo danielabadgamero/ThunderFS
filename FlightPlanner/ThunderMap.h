@@ -49,21 +49,10 @@ namespace Thunder::Map
 	public:
 		Tile(std::vector<char>);
 		void draw(Pos) const;
-		bool inCamera(Pos) const;
 	};
-
-	struct ThreadData
-	{
-		int x{};
-		int y{};
-		int i{};
-	};
-	struct Thread
-	{
-		SDL_Thread* thread{ nullptr };
-		bool threadDone{ true };
-	};
-	inline Thread updateThreads[200]{};
+	
+	inline SDL_Thread* updateThread{ nullptr };
+	inline bool threadDone{ true };
 
 	struct HashFunc
 	{
