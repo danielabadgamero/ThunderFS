@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include <unordered_set>
+#include <unordered_map>
 
 #include <SDL.h>
 
@@ -17,6 +17,7 @@ namespace Thunder::Map
 		int x{};
 		int y{};
 		Coords toCoords(int) const;
+		bool operator==(const Pos&) const;
 	};
 
 	struct Coords
@@ -44,21 +45,11 @@ namespace Thunder::Map
 	class Tile
 	{
 	private:
-		int zoom{};
-		Pos pos{};
-		Coords coords{};
 		std::vector<char> rawTexture{};
 	public:
-		struct HashFunc
-		{
-			size_t operator()(const Tile&) const;
-		};
-		bool operator==(const Tile&) const;
-		Tile(int, int, int, std::vector<char>);
-		Pos getPos() const;
-		Coords getCoords() const;
-		int getZoom() const;
-		void draw() const;
+		Tile(std::vector<char>);
+		void draw(Pos) const;
+		bool inCamera(Pos) const;
 	};
 
 	struct ThreadData
@@ -73,7 +64,12 @@ namespace Thunder::Map
 		bool threadDone{ true };
 	};
 	inline Thread updateThreads[200]{};
-	inline std::unordered_set<Tile, Tile::HashFunc> tiles{};
+
+	struct HashFunc
+	{
+		unsigned long long operator()(const Pos&) const;
+	};
+	inline std::unordered_map<Pos, Tile*, HashFunc> tiles[20]{};
 
 	void draw();
 	void updateTiles();

@@ -1,7 +1,7 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
-#include <unordered_set>
+#include <unordered_map>
 #include <fstream>
 #include <filesystem>
 
@@ -59,9 +59,6 @@ void Thunder::Map::Camera::move(int incX, int incY)
 	y -= incY;
 }
 
-Thunder::Map::Pos Thunder::Map::Tile::getPos() const { return pos; }
-Thunder::Map::Coords Thunder::Map::Tile::getCoords() const { return coords; }
-
 Thunder::Map::Coords Thunder::Map::Pos::toCoords(int zoom) const
 {
 	double n{ M_PI - 2 * M_PI * y / static_cast<double>(1 << zoom) };
@@ -74,29 +71,36 @@ Thunder::Map::Pos Thunder::Map::Coords::toPos(int zoom) const
 	return { static_cast<int>(floor((lon + 180) / 360 * static_cast<double>(1 << zoom))), static_cast<int>(floor((1 - asinh(tan(latRad)) / M_PI) / 2 * static_cast<double>(1 << zoom))) };
 }
 
+bool Thunder::Map::Pos::operator==(const Pos& B) const
+{
+	return x == B.x && y == B.y;
+}
+
 void Thunder::Map::updateTiles()
 {
 	for (int startY{}; startY != monitor.h / 256 + 1; startY++)
 		for (int startX{}; startX != monitor.w / 256 + 1; startX++)
-			if (!tiles.contains(Tile{ camera.getZoom(), startX + camera.getX() / 256, startY + camera.getY() / 256, {}}))
+		{
+			int max{ static_cast<int>(std::pow(2, camera.getZoom())) };
+			if (!tiles[camera.getZoom()].contains({ mod(startX + camera.getX() / 256, max), mod(startY + camera.getY() / 256, max)}))
 				for (int i{}; i != 200; i++)
 					if (updateThreads[i].threadDone)
 					{
 						SDL_WaitThread(updateThreads[i].thread, nullptr);
 						updateThreads[i].threadDone = false;
 						updateThreads[i].thread = SDL_CreateThread(addTile, std::string{ "update_#" + std::to_string(i) }.c_str(), (void*)(new ThreadData
-							{ startX + camera.getX() / 256, startY + camera.getY() / 256, i }));
+							{ mod(startX + camera.getX() / 256, max), mod(startY + camera.getY() / 256, max), i }));
 						break;
 					}
+		}
 }
 
 int Thunder::Map::addTile(void* data)
 {
 	ThreadData pos{ *(ThreadData*)data };
-	int max{ static_cast<int>(std::pow(2, camera.getZoom())) };
 
-	std::string URL{ "/" + std::to_string(camera.getZoom()) + "/" + std::to_string(mod(pos.x, max)) + "/" + std::to_string(mod(pos.y, max)) + ".png" };
-	std::string path{ std::to_string(camera.getZoom()) + "_" + std::to_string(mod(pos.x, max)) + "_" + std::to_string(mod(pos.y, max)) + ".png" };
+	std::string URL{ "/" + std::to_string(camera.getZoom()) + "/" + std::to_string(pos.x) + "/" + std::to_string(pos.y) + ".png" };
+	std::string path{ std::to_string(camera.getZoom()) + "_" + std::to_string(pos.x) + "_" + std::to_string(pos.y) + ".png" };
 
 	std::vector<char> content{};
 	if (std::filesystem::exists("./tiles/" + path))
@@ -107,7 +111,7 @@ int Thunder::Map::addTile(void* data)
 			content.push_back(0);
 			tile.read(&content.back(), 1);
 		}
-		tiles.emplace(Tile{ camera.getZoom(), pos.x, pos.y, content });
+		tiles[camera.getZoom()][{ pos.x, pos.y }] = new Tile{ content };
 	}
 	else
 	{
@@ -115,7 +119,7 @@ int Thunder::Map::addTile(void* data)
 		content = Net::receive();
 		if (content.size() > 1)
 		{
-			tiles.emplace(Tile{ camera.getZoom(), pos.x, pos.y, content });
+			tiles[camera.getZoom()][{ pos.x, pos.y }] = new Tile{ content };
 			std::ofstream tile{ "./tiles/" + path, std::ios::binary };
 			for (std::vector<char>::iterator PNG_start{ std::find(content.begin(), content.end(), -119) }; PNG_start != content.end(); PNG_start++)
 				tile.write(&(*PNG_start), 1);
@@ -129,12 +133,19 @@ int Thunder::Map::addTile(void* data)
 
 void Thunder::Map::draw()
 {
-	for (const Tile& tile : tiles)
-		if (tile.getZoom() == camera.getZoom())
-			tile.draw();
+	for (const auto& [pos, tile] : tiles[camera.getZoom()])
+		if (tile->inCamera(pos))
+			tile->draw(pos);
 }
 
-void Thunder::Map::Tile::draw() const
+bool Thunder::Map::Tile::inCamera(Pos pos) const
+{
+	SDL_Point tilePoint{ pos.x, pos.y };
+	SDL_Rect cameraRect{ -256, -256, monitor.w + 256, monitor.h + 256 };
+	return SDL_PointInRect(&tilePoint, &cameraRect);
+}
+
+void Thunder::Map::Tile::draw(Pos pos) const
 {
 	SDL_RWops* img{ SDL_RWFromMem((void*)rawTexture.data(), static_cast<int>(rawTexture.end() - rawTexture.begin()))};
 	SDL_Texture* texture{ IMG_LoadTexture_RW(renderer, img, 0) };
@@ -144,11 +155,8 @@ void Thunder::Map::Tile::draw() const
 	SDL_DestroyTexture(texture);
 }
 
-Thunder::Map::Tile::Tile(int zoom, int x, int y, std::vector<char> content) : zoom{ zoom }
+Thunder::Map::Tile::Tile(std::vector<char> content)
 {
-	pos.x = x;
-	pos.y = y;
-
 	std::vector<char>::iterator startIt{ std::find(content.begin(), content.end(), -119) };
 	if (startIt == content.end())
 		return;
@@ -156,13 +164,7 @@ Thunder::Map::Tile::Tile(int zoom, int x, int y, std::vector<char> content) : zo
 		rawTexture.push_back(*startIt);
 }
 
-int Thunder::Map::Tile::getZoom() const { return zoom; }
-bool Thunder::Map::Tile::operator==(const Tile& tile) const { return (zoom == tile.zoom) && (pos.x == tile.pos.x) && (pos.y == tile.pos.y); }
-
-size_t Thunder::Map::Tile::HashFunc::operator()(const Tile& tile) const
+unsigned long long Thunder::Map::HashFunc::operator()(const Pos& pos) const
 {
-	size_t zHash{ std::hash<int>()(tile.zoom) };
-	size_t xHash{ std::hash<int>()(tile.pos.x) << 1 };
-	size_t yHash{ std::hash<int>()(tile.pos.y) << 2 };
-	return zHash ^ xHash ^ yHash;
+	return (std::hash<int>()(pos.x) ^ (std::hash<int>()(pos.y) << 1));
 }
