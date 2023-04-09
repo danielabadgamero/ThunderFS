@@ -3,11 +3,12 @@
 
 #include <SDL_net.h>
 
+#include "ThunderCore.h"
 #include "ThunderNet.h"
 
-int Thunder::Net::connect(void* h)
+void Thunder::Net::connect(std::string h)
 {
-	host = *(std::string*)h;
+	host = h;
 	SDLNet_ResolveHost(&ip, host.c_str(), 80);
 }
 

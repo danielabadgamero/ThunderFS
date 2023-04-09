@@ -8,11 +8,10 @@ namespace Thunder
 	struct Thread
 	{
 		SDL_Thread* thread{};
-		bool done{ true };
+		bool done{};
 	};
 
-	inline Thread cacheIO{};
-	inline Thread serverConnect{};
+	inline Thread load{};
 
 	inline SDL_Window* window{};
 	inline SDL_Renderer* renderer{};

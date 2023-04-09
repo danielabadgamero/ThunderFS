@@ -2,6 +2,7 @@
 #include <vector>
 #include <unordered_map>
 #include <fstream>
+#include <filesystem>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -19,9 +20,12 @@ static int mod(int x, int y)
 
 int Thunder::Map::loadCache(void*)
 {
+	size_t fileSize{ std::filesystem::file_size("cache.dat") };
+	size_t currentByte{};
 	std::ifstream cache{ "cache.dat", std::ios::binary };
 	while (!cache.eof())
 	{
+		loadingCacheProgress = static_cast<double>(currentByte) / fileSize;
 		int zoom{};
 		int x{};
 		int y{};
@@ -34,10 +38,14 @@ int Thunder::Map::loadCache(void*)
 		for (int i{}; i != textureSize; i++)
 			cache.read(&content[i], 1);
 		tiles[zoom][{ x, y }] = new Tile{ content };
+		currentByte += (size_t)(12) + textureSize;
 	}
+
+	load.done = true;
+	return 0;
 }
 
-int Thunder::Map::saveCache(void*)
+void Thunder::Map::saveCache()
 {
 	std::remove("cache.dat");
 	std::ofstream cache{ "cache.dat", std::ios::binary };
@@ -121,7 +129,7 @@ void Thunder::Map::updateTiles()
 				{
 					SDL_WaitThread(update.thread, nullptr);
 					update.done = false;
-					update.thread = SDL_CreateThread(addTile, "updateThread", (void*)(new Pos
+					update.thread = SDL_CreateThread(addTile, "addTile", (void*)(new Pos
 						{ mod(startX + camera.getX() / 256, max), mod(startY + camera.getY() / 256, max) }));
 				}
 		}

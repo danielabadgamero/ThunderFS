@@ -52,7 +52,7 @@ namespace Thunder::Map
 		std::vector<char> getTexture() const;
 	};
 
-	inline Thread update{};
+	inline Thread update{ nullptr, true };
 
 	struct HashFunc
 	{
@@ -60,11 +60,13 @@ namespace Thunder::Map
 	};
 	inline std::unordered_map<Pos, Tile*, HashFunc> tiles[20]{};
 
+	inline double loadingCacheProgress{};
+
 	int loadCache(void*);
 	void draw();
 	void updateTiles();
 	int addTile(void*);
-	int saveCache(void*);
+	void saveCache();
 }
 
 #endif

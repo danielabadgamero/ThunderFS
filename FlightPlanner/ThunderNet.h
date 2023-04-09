@@ -12,7 +12,7 @@ namespace Thunder::Net
 	inline IPaddress ip{};
 	inline std::string host{};
 
-	int connect(void*);
+	void connect(std::string);
 	void send(std::string);
 	std::vector<char> receive();
 	void close();
