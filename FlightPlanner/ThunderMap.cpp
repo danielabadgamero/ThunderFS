@@ -85,7 +85,7 @@ void Thunder::Map::updateTiles()
 		else
 			tile++;
 	}
-
+	
 	Pos endPos{ (monitor.w + camera.getX()) / 256 + 1, (monitor.h + camera.getY()) / 256 + 1 };
 	for (int startY{ camera.getY() / 256 - 1 }; startY != endPos.y; startY++)
 		for (int startX{ camera.getX() / 256 - 1 }; startX != endPos.x; startX++)
