@@ -76,26 +76,16 @@ Thunder::Map::Pos Thunder::Map::Coords::toPos(int zoom) const
 
 void Thunder::Map::updateTiles()
 {
-	for (std::unordered_set<Tile>::iterator tile{ tiles.begin() }; tile != tiles.end();)
-	{
-		SDL_Rect cameraRect{ camera.getX() - 256, camera.getY() - 256, monitor.w + 256, monitor.h + 256 };
-		SDL_Point tilePoint{ tile->getPos().x * 256, tile->getPos().y * 256 };
-		if (!SDL_PointInRect(&tilePoint, &cameraRect) || !(tile->getZoom() == camera.getZoom()))
-			tiles.erase(tile++);
-		else
-			tile++;
-	}
-	
-	Pos endPos{ (monitor.w + camera.getX()) / 256 + 1, (monitor.h + camera.getY()) / 256 + 1 };
-	for (int startY{ camera.getY() / 256 - 1 }; startY != endPos.y; startY++)
-		for (int startX{ camera.getX() / 256 - 1 }; startX != endPos.x; startX++)
-			if (!tiles.contains(Tile{ camera.getZoom(), startX, startY, {} }))
+	for (int startY{}; startY != monitor.h / 256 + 1; startY++)
+		for (int startX{}; startX != monitor.w / 256 + 1; startX++)
+			if (!tiles.contains(Tile{ camera.getZoom(), startX + camera.getX() / 256, startY + camera.getY() / 256, {}}))
 				for (int i{}; i != 200; i++)
 					if (updateThreads[i].threadDone)
 					{
 						SDL_WaitThread(updateThreads[i].thread, nullptr);
 						updateThreads[i].threadDone = false;
-						updateThreads[i].thread = SDL_CreateThread(addTile, std::string{ "update_#" + std::to_string(i) }.c_str(), (void*)(new ThreadData{ startX, startY, i }));
+						updateThreads[i].thread = SDL_CreateThread(addTile, std::string{ "update_#" + std::to_string(i) }.c_str(), (void*)(new ThreadData
+							{ startX + camera.getX() / 256, startY + camera.getY() / 256, i }));
 						break;
 					}
 }
@@ -140,7 +130,8 @@ int Thunder::Map::addTile(void* data)
 void Thunder::Map::draw()
 {
 	for (const Tile& tile : tiles)
-		tile.draw();
+		if (tile.getZoom() == camera.getZoom())
+			tile.draw();
 }
 
 void Thunder::Map::Tile::draw() const
@@ -148,11 +139,8 @@ void Thunder::Map::Tile::draw() const
 	SDL_RWops* img{ SDL_RWFromMem((void*)rawTexture.data(), static_cast<int>(rawTexture.end() - rawTexture.begin()))};
 	SDL_Texture* texture{ IMG_LoadTexture_RW(renderer, img, 0) };
 	SDL_RWclose(img);
-	if (texture)
-	{
-		SDL_Rect rect{ pos.x * 256 - camera.getX(), pos.y * 256 - camera.getY(), 256, 256 };
-		SDL_RenderCopy(renderer, texture, NULL, &rect);
-	}
+	SDL_Rect rect{ pos.x * 256 - camera.getX(), pos.y * 256 - camera.getY(), 256, 256 };
+	SDL_RenderCopy(renderer, texture, NULL, &rect);
 	SDL_DestroyTexture(texture);
 }
 
