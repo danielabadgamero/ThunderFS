@@ -20,6 +20,13 @@ namespace Thunder::Map
 		bool operator==(const Pos&) const;
 	};
 
+	struct TileData
+	{
+		int x{};
+		int y{};
+		int z{};
+	};
+
 	struct Coords
 	{
 		double lon{};

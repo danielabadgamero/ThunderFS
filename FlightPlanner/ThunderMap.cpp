@@ -20,6 +20,11 @@ static int mod(int x, int y)
 
 int Thunder::Map::loadCache(void*)
 {
+	if (!std::filesystem::exists("cache.dat"))
+	{
+		load.done = true;
+		return 0;
+	}
 	size_t fileSize{ std::filesystem::file_size("cache.dat") };
 	size_t currentByte{};
 	std::ifstream cache{ "cache.dat", std::ios::binary };
@@ -131,8 +136,8 @@ void Thunder::Map::updateTiles()
 				{
 					SDL_WaitThread(update.thread, nullptr);
 					update.done = false;
-					update.thread = SDL_CreateThread(addTile, "addTile", (void*)(new Pos
-						{ mod(startX + camera.getX() / 256, max), mod(startY + camera.getY() / 256, max) }));
+					update.thread = SDL_CreateThread(addTile, "addTile", (void*)(new TileData
+						{ mod(startX + camera.getX() / 256, max), mod(startY + camera.getY() / 256, max), camera.getZoom() }));
 				}
 		}
 }
@@ -144,16 +149,16 @@ std::vector<char> Thunder::Map::Tile::getTexture() const
 
 int Thunder::Map::addTile(void* data)
 {
-	Pos pos{ *(Pos*)data };
+	TileData pos{ *(TileData*)data };
 
-	std::string URL{ "/" + std::to_string(camera.getZoom()) + "/" + std::to_string(pos.x) + "/" + std::to_string(pos.y) + ".png" };
-	std::string path{ "./tiles/" + std::to_string(camera.getZoom()) + "_" + std::to_string(pos.x) + "_" + std::to_string(pos.y) + ".png" };
+	std::string URL{ "/" + std::to_string(pos.z) + "/" + std::to_string(pos.x) + "/" + std::to_string(pos.y) + ".png" };
+	std::string path{ "./tiles/" + std::to_string(pos.z) + "_" + std::to_string(pos.x) + "_" + std::to_string(pos.y) + ".png" };
 
 	Net::send(URL);
 	std::vector<char> content{ Net::receive() };
 	if (content.size() > 1)
 	{
-		tiles[camera.getZoom()][{ pos.x, pos.y }] = new Tile{ content };
+		tiles[pos.z][{ pos.x, pos.y }] = new Tile{ content };
 		std::ofstream tile{ path, std::ios::binary };
 		for (std::vector<char>::iterator PNG_start{ std::find(content.begin(), content.end(), -119) }; PNG_start != content.end(); PNG_start++)
 			tile.write(&(*PNG_start), 1);
@@ -169,6 +174,12 @@ void Thunder::Map::draw()
 		for (int x{ camera.getX() / 256 }; x != (camera.getX() + monitor.w) / 256 + 1; x++)
 			if (tiles[camera.getZoom()].contains({x, y}))
 				tiles[camera.getZoom()][{x, y}]->draw({x, y});
+			else
+			{
+				SDL_Rect rect{ x * 256 - camera.getX(), y * 256 - camera.getY(), 256, 256};
+				SDL_SetRenderDrawColor(renderer, 0xf5, 0xf5, 0xdc, 0xff);
+				SDL_RenderFillRect(renderer, &rect);
+			}
 }
 
 void Thunder::Map::Tile::draw(Pos pos) const

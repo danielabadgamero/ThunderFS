@@ -94,7 +94,21 @@ void Thunder::event()
 			break;
 		case SDL_MOUSEMOTION:
 			if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LEFT)
+			{
+				if (e.motion.x == monitor.w - 1 && e.motion.xrel > 0)
+					SDL_WarpMouseInWindow(window, 0, e.motion.y);
+
+				if (e.motion.y == monitor.h - 1 && e.motion.yrel > 0)
+					SDL_WarpMouseInWindow(window, e.motion.x, 0);
+
+				if (e.motion.x == 0 && e.motion.xrel < 0)
+					SDL_WarpMouseInWindow(window, monitor.w, e.motion.y);
+
+				if (e.motion.y == 0 && e.motion.yrel < 0)
+					SDL_WarpMouseInWindow(window, e.motion.x, monitor.h);
+
 				Map::camera.move(e.motion.xrel, e.motion.yrel);
+			}
 			break;
 		case SDL_MOUSEWHEEL:
 			if (e.wheel.y > 0)
