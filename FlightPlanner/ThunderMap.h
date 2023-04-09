@@ -72,7 +72,7 @@ namespace Thunder::Map
 		SDL_Thread* thread{ nullptr };
 		bool threadDone{ true };
 	};
-	inline Thread updateThreads[100]{};
+	inline Thread updateThreads[200]{};
 	inline std::unordered_set<Tile, Tile::HashFunc> tiles{};
 
 	void draw();

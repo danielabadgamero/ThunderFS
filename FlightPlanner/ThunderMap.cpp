@@ -90,7 +90,7 @@ void Thunder::Map::updateTiles()
 	for (int startY{ camera.getY() / 256 - 1 }; startY != endPos.y; startY++)
 		for (int startX{ camera.getX() / 256 - 1 }; startX != endPos.x; startX++)
 			if (!tiles.contains(Tile{ camera.getZoom(), startX, startY, {} }))
-				for (int i{}; i != 100; i++)
+				for (int i{}; i != 200; i++)
 					if (updateThreads[i].threadDone)
 					{
 						SDL_WaitThread(updateThreads[i].thread, nullptr);
