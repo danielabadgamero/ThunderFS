@@ -18,7 +18,7 @@ void Thunder::init(const char* title)
 
 	running = true;
 
-	Map::loadCache();
+	Map::loadCache(nullptr);
 	Net::connect("tile.openstreetmap.org");
 }
 
@@ -67,7 +67,7 @@ void Thunder::draw()
 void Thunder::quit()
 {
 	Net::close();
-	Map::saveCache();
+	Map::saveCache(nullptr);
 
 	SDL_DestroyWindow(window);
 	SDL_DestroyRenderer(renderer);

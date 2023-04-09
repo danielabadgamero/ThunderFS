@@ -17,7 +17,7 @@ static int mod(int x, int y)
 	return x - y * (x / y - (x % y && (x ^ y) < 0));
 }
 
-void Thunder::Map::loadCache()
+int Thunder::Map::loadCache(void*)
 {
 	std::ifstream cache{ "cache.dat", std::ios::binary };
 	while (!cache.eof())
@@ -37,7 +37,7 @@ void Thunder::Map::loadCache()
 	}
 }
 
-void Thunder::Map::saveCache()
+int Thunder::Map::saveCache(void*)
 {
 	std::remove("cache.dat");
 	std::ofstream cache{ "cache.dat", std::ios::binary };
@@ -117,11 +117,11 @@ void Thunder::Map::updateTiles()
 		{
 			int max{ static_cast<int>(std::pow(2, camera.getZoom())) };
 			if (!tiles[camera.getZoom()].contains({ mod(startX + camera.getX() / 256, max), mod(startY + camera.getY() / 256, max) }))
-				if (threadDone)
+				if (update.done)
 				{
-					SDL_WaitThread(updateThread, nullptr);
-					threadDone = false;
-					updateThread = SDL_CreateThread(addTile, "updateThread", (void*)(new Pos
+					SDL_WaitThread(update.thread, nullptr);
+					update.done = false;
+					update.thread = SDL_CreateThread(addTile, "updateThread", (void*)(new Pos
 						{ mod(startX + camera.getX() / 256, max), mod(startY + camera.getY() / 256, max) }));
 				}
 		}
@@ -149,7 +149,7 @@ int Thunder::Map::addTile(void* data)
 			tile.write(&(*PNG_start), 1);
 	}
 
-	threadDone = true;
+	update.done = true;
 	return 0;
 }
 

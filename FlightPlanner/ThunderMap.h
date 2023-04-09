@@ -51,9 +51,8 @@ namespace Thunder::Map
 		void draw(Pos) const;
 		std::vector<char> getTexture() const;
 	};
-	
-	inline SDL_Thread* updateThread{ nullptr };
-	inline bool threadDone{ true };
+
+	inline Thread update{};
 
 	struct HashFunc
 	{
@@ -61,11 +60,11 @@ namespace Thunder::Map
 	};
 	inline std::unordered_map<Pos, Tile*, HashFunc> tiles[20]{};
 
-	void loadCache();
+	int loadCache(void*);
 	void draw();
 	void updateTiles();
 	int addTile(void*);
-	void saveCache();
+	int saveCache(void*);
 }
 
 #endif

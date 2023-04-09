@@ -5,9 +5,9 @@
 
 #include "ThunderNet.h"
 
-void Thunder::Net::connect(std::string h)
+int Thunder::Net::connect(void* h)
 {
-	host = h;
+	host = *(std::string*)h;
 	SDLNet_ResolveHost(&ip, host.c_str(), 80);
 }
 
