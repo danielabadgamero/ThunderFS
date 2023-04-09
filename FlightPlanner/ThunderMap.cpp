@@ -41,6 +41,8 @@ int Thunder::Map::loadCache(void*)
 		currentByte += (size_t)(12) + textureSize;
 	}
 
+	tiles[0].erase(Pos{ 0, 0 });
+
 	load.done = true;
 	return 0;
 }
@@ -82,7 +84,7 @@ void Thunder::Map::Camera::zoomIn()
 
 void Thunder::Map::Camera::zoomOut()
 {
-	if (zoom > 1)
+	if (zoom > 0)
 	{
 		int mouseX{};
 		int mouseY{};

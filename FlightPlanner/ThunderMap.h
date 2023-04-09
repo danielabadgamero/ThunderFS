@@ -30,7 +30,7 @@ namespace Thunder::Map
 	inline class Camera
 	{
 	private:
-		int zoom{ 1 };
+		int zoom{};
 		int x{};
 		int y{};
 	public:
