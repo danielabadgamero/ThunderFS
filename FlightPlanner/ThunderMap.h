@@ -60,9 +60,11 @@ namespace Thunder::Map
 	};
 	inline std::unordered_map<Pos, Tile*, HashFunc> tiles[20]{};
 
+	void loadCache();
 	void draw();
 	void updateTiles();
 	int addTile(void*);
+	void saveCache();
 }
 
 #endif

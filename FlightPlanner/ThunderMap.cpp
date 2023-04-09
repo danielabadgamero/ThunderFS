@@ -28,6 +28,11 @@ static bool isPNG(std::vector<char> content)
 	return true;
 }
 
+void Thunder::Map::loadCache()
+{
+
+}
+
 int Thunder::Map::Camera::getZoom() const { return zoom; }
 int Thunder::Map::Camera::getX() const { return x; }
 int Thunder::Map::Camera::getY() const { return y; }
