@@ -61,12 +61,12 @@ namespace Thunder::Map
 		void draw() const;
 	};
 
-	inline SDL_Thread* updateThread{};
-	inline int threadStatus{};
+	inline SDL_Thread* updateThreads[10]{};
 	inline std::unordered_set<Tile, Tile::HashFunc> tiles{};
 
 	void draw();
-	int updateTiles(void*);
+	void updateTiles();
+	int addTile(void*);
 }
 
 #endif

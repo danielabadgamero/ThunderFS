@@ -27,20 +27,14 @@ void Thunder::Map::Camera::zoomIn()
 {
 	if (zoom < 19)
 	{
+		x *= 2;
+		y *= 2;
 		int mouseX{};
 		int mouseY{};
 		SDL_GetMouseState(&mouseX, &mouseY);
-		x *= 2;
-		y *= 2;
 		x += mouseX;
 		y += mouseY;
 		zoom++;
-		if (threadStatus)
-		{
-			threadStatus = 0;
-			SDL_WaitThread(updateThread, nullptr);
-			updateThread = SDL_CreateThread(updateTiles, "updateTiles", nullptr);
-		}
 	}
 }
 
@@ -51,17 +45,11 @@ void Thunder::Map::Camera::zoomOut()
 		int mouseX{};
 		int mouseY{};
 		SDL_GetMouseState(&mouseX, &mouseY);
-		x /= 2;
-		y /= 2;
 		x -= mouseX;
 		y -= mouseY;
+		x /= 2;
+		y /= 2;
 		zoom--;
-		if (threadStatus)
-		{
-			threadStatus = 0;
-			SDL_WaitThread(updateThread, nullptr);
-			updateThread = SDL_CreateThread(updateTiles, "updateTiles", nullptr);
-		}
 	}
 }
 
@@ -69,13 +57,6 @@ void Thunder::Map::Camera::move(int incX, int incY)
 {
 	x -= incX;
 	y -= incY;
-
-	if (threadStatus)
-	{
-		threadStatus = 0;
-		SDL_WaitThread(updateThread, nullptr);
-		updateThread = SDL_CreateThread(updateTiles, "updateTiles", nullptr);
-	}
 }
 
 Thunder::Map::Pos Thunder::Map::Tile::getPos() const { return pos; }
@@ -93,62 +74,69 @@ Thunder::Map::Pos Thunder::Map::Coords::toPos(int zoom) const
 	return { static_cast<int>(floor((lon + 180) / 360 * static_cast<double>(1 << zoom))), static_cast<int>(floor((1 - asinh(tan(latRad)) / M_PI) / 2 * static_cast<double>(1 << zoom))) };
 }
 
-int Thunder::Map::updateTiles(void*)
+void Thunder::Map::updateTiles()
 {
-	Pos endPos{ (monitor.w + camera.getX()) / 256 + 1, (monitor.h + camera.getY()) / 256 + 1 };
+	for (std::unordered_set<Tile>::iterator tile{ tiles.begin() }; tile != tiles.end();)
+	{
+		SDL_Rect cameraRect{ camera.getX() - 256, camera.getY() - 256, monitor.w + 256, monitor.h + 256 };
+		SDL_Point tilePoint{ tile->getPos().x * 256, tile->getPos().y * 256 };
+		if (!SDL_PointInRect(&tilePoint, &cameraRect) || !(tile->getZoom() == camera.getZoom()))
+			tiles.erase(tile++);
+		else
+			tile++;
+	}
 
+	Pos endPos{ (monitor.w + camera.getX()) / 256 + 1, (monitor.h + camera.getY()) / 256 + 1 };
 	for (int startY{ camera.getY() / 256 - 1 }; startY != endPos.y; startY++)
 		for (int startX{ camera.getX() / 256 - 1 }; startX != endPos.x; startX++)
 			if (!tiles.contains(Tile{ camera.getZoom(), startX, startY, {} }))
-			{
-				int max{ static_cast<int>(std::pow(2, camera.getZoom())) };
-				std::string URL{ "/" + std::to_string(camera.getZoom()) + "/" + std::to_string(mod(startX, max)) + "/" + std::to_string(mod(startY, max)) + ".png" };
-				std::string path{ std::to_string(camera.getZoom()) + "_" + std::to_string(mod(startX, max)) + "_" + std::to_string(mod(startY, max)) + ".png" };
-				std::vector<char> content{};
-				if (std::filesystem::exists("./tiles/" + path))
-				{
-					std::ifstream tile{ "./tiles/" + path, std::ios::binary};
-					while (!tile.eof())
+				for (int i{}; i != 10; i++)
+					if (!updateThreads[i])
 					{
-						content.push_back(0);
-						tile.read(&content.back(), 1);
+						updateThreads[i] = SDL_CreateThread(addTile, std::string{ "update_#" + std::to_string(i) }.c_str(), (void*)(new Pos{ startX, startY }));
+						SDL_DetachThread(updateThreads[i]);
 					}
-					tiles.emplace(Tile{ camera.getZoom(), startX, startY, content });
-				}
-				else
-				{
-					Net::send(URL);
-					content = Net::receive();
-					if (content.size() > 1)
-					{
-						tiles.emplace(Tile{ camera.getZoom(), startX, startY, content });
-						std::ofstream tile{ "./tiles/" + path, std::ios::binary};
-						for (std::vector<char>::iterator PNG_start{ std::find(content.begin(), content.end(), -119) }; PNG_start != content.end(); PNG_start++)
-							tile.write(&(*PNG_start), 1);
-					}
-				}
-			}
-	threadStatus = 1;
+}
+
+int Thunder::Map::addTile(void* data)
+{
+	Pos pos{ *(Pos*)data };
+	int max{ static_cast<int>(std::pow(2, camera.getZoom())) };
+
+	std::string URL{ "/" + std::to_string(camera.getZoom()) + "/" + std::to_string(mod(pos.x, max)) + "/" + std::to_string(mod(pos.y, max)) + ".png" };
+	std::string path{ std::to_string(camera.getZoom()) + "_" + std::to_string(mod(pos.x, max)) + "_" + std::to_string(mod(pos.y, max)) + ".png" };
+
+	std::vector<char> content{};
+	if (std::filesystem::exists("./tiles/" + path))
+	{
+		std::ifstream tile{ "./tiles/" + path, std::ios::binary };
+		while (!tile.eof())
+		{
+			content.push_back(0);
+			tile.read(&content.back(), 1);
+		}
+		tiles.emplace(Tile{ camera.getZoom(), pos.x, pos.y, content });
+	}
+	else
+	{
+		Net::send(URL);
+		content = Net::receive();
+		if (content.size() > 1)
+		{
+			tiles.emplace(Tile{ camera.getZoom(), pos.x, pos.y, content });
+			std::ofstream tile{ "./tiles/" + path, std::ios::binary };
+			for (std::vector<char>::iterator PNG_start{ std::find(content.begin(), content.end(), -119) }; PNG_start != content.end(); PNG_start++)
+				tile.write(&(*PNG_start), 1);
+		}
+	}
+
 	return 0;
 }
 
 void Thunder::Map::draw()
 {
-	for (std::unordered_set<Tile>::iterator tile{ tiles.begin() }; tile != tiles.end();)
-		if (tile->getZoom() == camera.getZoom())
-		{
-			SDL_Rect cameraRect{ camera.getX() - 256, camera.getY() - 256, monitor.w + 256, monitor.h + 256 };
-			SDL_Point tilePoint{ tile->getPos().x * 256, tile->getPos().y * 256 };
-			if (SDL_PointInRect(&tilePoint, &cameraRect))
-			{
-				tile->draw();
-				tile++;
-			}
-			else
-				tiles.erase(tile++);
-		}
-		else
-			tiles.erase(tile++);
+	for (const Tile& tile : tiles)
+		tile.draw();
 }
 
 void Thunder::Map::Tile::draw() const

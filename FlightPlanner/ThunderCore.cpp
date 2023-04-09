@@ -28,7 +28,6 @@ void Thunder::init(const char* title)
 	running = true;
 
 	Net::connect("tile.openstreetmap.org");
-	Map::updateTiles(nullptr);
 }
 
 void Thunder::event()
@@ -66,6 +65,8 @@ void Thunder::event()
 
 void Thunder::draw()
 {
+	Map::updateTiles();
+
 	ImGui_ImplSDLRenderer_NewFrame();
 	ImGui_ImplSDL2_NewFrame();
 	ImGui::NewFrame();
