@@ -91,16 +91,17 @@ void Thunder::Map::updateTiles()
 		for (int startX{ camera.getX() / 256 - 1 }; startX != endPos.x; startX++)
 			if (!tiles.contains(Tile{ camera.getZoom(), startX, startY, {} }))
 				for (int i{}; i != 10; i++)
-					if (!updateThreads[i])
+					if (updateThreads[i].threadDone)
 					{
-						updateThreads[i] = SDL_CreateThread(addTile, std::string{ "update_#" + std::to_string(i) }.c_str(), (void*)(new Pos{ startX, startY }));
-						SDL_DetachThread(updateThreads[i]);
+						SDL_WaitThread(updateThreads[i].thread, nullptr);
+						updateThreads[i].thread = SDL_CreateThread(addTile, std::string{ "update_#" + std::to_string(i) }.c_str(), (void*)(new ThreadData{ startX, startY, i }));
+						break;
 					}
 }
 
 int Thunder::Map::addTile(void* data)
 {
-	Pos pos{ *(Pos*)data };
+	ThreadData pos{ *(ThreadData*)data };
 	int max{ static_cast<int>(std::pow(2, camera.getZoom())) };
 
 	std::string URL{ "/" + std::to_string(camera.getZoom()) + "/" + std::to_string(mod(pos.x, max)) + "/" + std::to_string(mod(pos.y, max)) + ".png" };
@@ -129,6 +130,8 @@ int Thunder::Map::addTile(void* data)
 				tile.write(&(*PNG_start), 1);
 		}
 	}
+
+	updateThreads[pos.i].threadDone = true;
 
 	return 0;
 }

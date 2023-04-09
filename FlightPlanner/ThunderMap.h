@@ -61,7 +61,18 @@ namespace Thunder::Map
 		void draw() const;
 	};
 
-	inline SDL_Thread* updateThreads[10]{};
+	struct ThreadData
+	{
+		int x{};
+		int y{};
+		int i{};
+	};
+	struct Thread
+	{
+		SDL_Thread* thread{ nullptr };
+		bool threadDone{ true };
+	};
+	inline Thread updateThreads[10]{};
 	inline std::unordered_set<Tile, Tile::HashFunc> tiles{};
 
 	void draw();
