@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <unordered_map>
 #include <fstream>
-#include <filesystem>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -19,18 +18,40 @@ static int mod(int x, int y)
 	return x - y * (x / y - (x % y && (x ^ y) < 0));
 }
 
-static bool isPNG(std::vector<char> content)
-{
-	std::vector<char> PNG{ '\x89', '\x50', '\x4E', '\x47', '\x0D', '\x0A', '\x1A', '\x0A', '\x00', '\x00', '\x00', '\x0D', '\x49', '\x48', '\x44', '\x52' };
-	for (int i{}; i != PNG.size(); i++)
-		if (content[i] != PNG[i])
-			return false;
-	return true;
-}
-
 void Thunder::Map::loadCache()
 {
+	std::ifstream cache{ "cache.dat", std::ios::binary };
+	while (!cache.eof())
+	{
+		int zoom{};
+		int x{};
+		int y{};
+		cache.read((char*)(&zoom), 4);
+		cache.read((char*)(&x), 4);
+		cache.read((char*)(&y), 4);
+		int textureSize{};
+		cache.read((char*)(&textureSize), 4);
+		std::vector<char> content(textureSize);
+		for (int i{}; i != textureSize; i++)
+			cache.read(&content[i], 1);
+		tiles[zoom][{ x, y }] = new Tile{ content };
+	}
+}
 
+void Thunder::Map::saveCache()
+{
+	std::remove("cache.dat");
+	std::ofstream cache{ "cache.dat", std::ios::binary };
+	for (int i{}; i != 20; i++)
+		for (const auto& [pos, tile] : tiles[i])
+		{
+			cache.write((char*)(&i), 4);
+			cache.write((char*)(&pos.x), 4);
+			cache.write((char*)(&pos.y), 4);
+			int textureSize{ static_cast<int>(tile->getTexture().size()) };
+			cache.write((char*)(&textureSize), 4);
+			cache.write(tile->getTexture().data(), tile->getTexture().size());
+		}
 }
 
 int Thunder::Map::Camera::getZoom() const { return zoom; }
@@ -54,7 +75,7 @@ void Thunder::Map::Camera::zoomIn()
 
 void Thunder::Map::Camera::zoomOut()
 {
-	if (zoom > 0)
+	if (zoom > 1)
 	{
 		int mouseX{};
 		int mouseY{};
@@ -107,43 +128,29 @@ void Thunder::Map::updateTiles()
 		}
 }
 
+std::vector<char> Thunder::Map::Tile::getTexture() const
+{
+	return rawTexture;
+}
+
 int Thunder::Map::addTile(void* data)
 {
 	Pos pos{ *(Pos*)data };
 
 	std::string URL{ "/" + std::to_string(camera.getZoom()) + "/" + std::to_string(pos.x) + "/" + std::to_string(pos.y) + ".png" };
-	std::string path{ "./tiles/" + std::to_string(camera.getZoom()) + "_" + std::to_string(pos.x) + "_" + std::to_string(pos.y) + ".png"};
+	std::string path{ "./tiles/" + std::to_string(camera.getZoom()) + "_" + std::to_string(pos.x) + "_" + std::to_string(pos.y) + ".png" };
 
-	std::vector<char> content{};
-	if (std::filesystem::exists(path))
+	Net::send(URL);
+	std::vector<char> content{ Net::receive() };
+	if (content.size() > 1)
 	{
-		std::ifstream tile{ path, std::ios::binary };
-		while (!tile.eof())
-		{
-			content.push_back(0);
-			tile.read(&content.back(), 1);
-		}
-		tile.close();
-		if (isPNG(content) && content.size() > 0)
-			tiles[camera.getZoom()][{ pos.x, pos.y }] = new Tile{ content };
-		else
-			std::remove(path.c_str());
-	}
-	else
-	{
-		Net::send(URL);
-		content = Net::receive();
-		if (content.size() > 1)
-		{
-			tiles[camera.getZoom()][{ pos.x, pos.y }] = new Tile{ content };
-			std::ofstream tile{ path, std::ios::binary };
-			for (std::vector<char>::iterator PNG_start{ std::find(content.begin(), content.end(), -119) }; PNG_start != content.end(); PNG_start++)
-				tile.write(&(*PNG_start), 1);
-		}
+		tiles[camera.getZoom()][{ pos.x, pos.y }] = new Tile{ content };
+		std::ofstream tile{ path, std::ios::binary };
+		for (std::vector<char>::iterator PNG_start{ std::find(content.begin(), content.end(), -119) }; PNG_start != content.end(); PNG_start++)
+			tile.write(&(*PNG_start), 1);
 	}
 
 	threadDone = true;
-
 	return 0;
 }
 
@@ -169,7 +176,7 @@ void Thunder::Map::Tile::draw(Pos pos) const
 			SDL_DestroyTexture(texture);
 		}
 		else
-			std::remove(("./tiles/" + std::to_string(camera.getZoom()) + "_" + std::to_string(pos.x) + "_" + std::to_string(pos.y) + ".png").c_str());
+			tiles[camera.getZoom()].erase(pos);
 	}
 }
 

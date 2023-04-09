@@ -30,7 +30,7 @@ namespace Thunder::Map
 	inline class Camera
 	{
 	private:
-		int zoom{};
+		int zoom{ 1 };
 		int x{};
 		int y{};
 	public:
@@ -49,6 +49,7 @@ namespace Thunder::Map
 	public:
 		Tile(std::vector<char>);
 		void draw(Pos) const;
+		std::vector<char> getTexture() const;
 	};
 	
 	inline SDL_Thread* updateThread{ nullptr };
