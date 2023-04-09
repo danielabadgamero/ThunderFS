@@ -1,6 +1,5 @@
 #include <cmath>
 #include <vector>
-#include <algorithm>
 #include <unordered_map>
 #include <fstream>
 

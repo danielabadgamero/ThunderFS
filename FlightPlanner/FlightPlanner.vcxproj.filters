@@ -21,27 +21,6 @@
     <ClCompile Include="ThunderCore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\SDK\imgui\imgui.cpp">
-      <Filter>Resource Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\SDK\imgui\imgui_demo.cpp">
-      <Filter>Resource Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\SDK\imgui\imgui_draw.cpp">
-      <Filter>Resource Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\SDK\imgui\imgui_tables.cpp">
-      <Filter>Resource Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\SDK\imgui\imgui_widgets.cpp">
-      <Filter>Resource Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\SDK\imgui\backends\imgui_impl_sdl2.cpp">
-      <Filter>Resource Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\SDK\imgui\backends\imgui_impl_sdlrenderer.cpp">
-      <Filter>Resource Files</Filter>
-    </ClCompile>
     <ClCompile Include="ThunderMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

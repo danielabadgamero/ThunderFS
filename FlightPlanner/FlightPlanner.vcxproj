@@ -105,7 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>D:\SDK\SDL\include;D:\SDK\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\SDK\SDL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -139,13 +139,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\SDK\imgui\backends\imgui_impl_sdl2.cpp" />
-    <ClCompile Include="..\..\..\SDK\imgui\backends\imgui_impl_sdlrenderer.cpp" />
-    <ClCompile Include="..\..\..\SDK\imgui\imgui.cpp" />
-    <ClCompile Include="..\..\..\SDK\imgui\imgui_demo.cpp" />
-    <ClCompile Include="..\..\..\SDK\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\..\..\SDK\imgui\imgui_tables.cpp" />
-    <ClCompile Include="..\..\..\SDK\imgui\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ThunderCore.cpp" />
     <ClCompile Include="ThunderMap.cpp" />
