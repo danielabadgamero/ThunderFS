@@ -10,8 +10,8 @@
 *.userosscache
 *.sln.docstates
 
-# tiles
-FlightPlanner/tiles/*
+# cache
+FlightPlanner/cache.dat
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
